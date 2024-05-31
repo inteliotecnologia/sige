@@ -1,0 +1,22 @@
+update op_limpa_pesagem
+set id_turno= '58'
+where hora_pesagem>='06:00:00'
+and   hora_pesagem<'12:00:00'
+/* 988 */
+
+update op_limpa_pesagem
+set id_turno= '40'
+where hora_pesagem>='12:00:00'
+and   hora_pesagem<'18:00:00'
+/* 1022 */
+
+update op_limpa_pesagem
+set id_turno= '42'
+where hora_pesagem>='18:00:00'
+/* 698 */
+
+update op_limpa_pesagem
+set id_turno= '41'
+where hora_pesagem>='00:00:00'
+and   hora_pesagem<'06:00:00'
+/* 810 */

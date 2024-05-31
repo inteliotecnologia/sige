@@ -1,0 +1,32 @@
+
+#logo, #logo_login {
+	background: none;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/logo.png, sizingMethod=crop);
+}
+legend {
+	margin-bottom: 10px;
+}
+#conteudo {
+	height: 320px;
+}
+#menu_principal, #menu_empresas, #menu_ajuda {
+	width: 70px;
+}
+#menu_relatorios_agua {
+	width: 100px;
+}
+#menu_relatorios_fluxo {
+	width: 110px;
+}
+#menu_os {
+	width: 140px;
+}
+#formulario_login input {
+	height: 26px;
+}
+#submenu ul li a {
+	width: 100px;
+}
+table.campos_pequenos th {
+	width: 20px;
+}

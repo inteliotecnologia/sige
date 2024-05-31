@@ -1,0 +1,318 @@
+
+body * {
+	margin: 0;
+	padding: 0;
+}
+
+/* ---------- TAGS GERAIS ----------------------------------- */
+
+body {
+	font: normal 9px Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3 {
+	text-align: left;
+	text-indent: 10px;
+	margin-bottom: 10px;
+}
+
+h2 {
+	font: bold 180% Helvetica, Arial, Verdana, Tahoma;
+	border-bottom: solid 3px #069;
+	margin-bottom: 20px;
+}
+
+h3 {
+	font: bold 140% Arial, Helvetica, sans-serif;
+}
+
+input, textarea, select {
+	font: normal 100% Arial, Helvetica, sans-serif;
+	border: 0;
+	background: #f0f;
+	color: #000;
+	width: 65%;
+}
+
+input:disabled, button:disabled, .desativado {
+	background: #fff;
+	border: 0;
+}
+
+label, input, textarea, select {
+	position: relative;
+	display: block;
+	float: left;
+	margin-bottom: 3px;
+}
+label {
+	margin-right: 10px;
+	width: 25%;
+	text-align: right;
+	font-weight: bold;
+}
+select {
+	width: 70%;
+}
+
+table {
+	width: 100%;
+	float: none !important;
+}
+table input, table textarea {
+	width: 85%;
+}
+th {
+	font: bold 120% "Trebuchet MS", Verdana, Arial;
+}
+th, td {
+	border-bottom: 1px solid #999;
+	padding: 1px;
+	float: none !important;
+}
+
+br {
+	clear: both;
+}
+fieldset {
+	position: relative;
+	width: 97%;
+	padding: 5px 10px;
+	border: 1px solid #ccc;
+	margin-bottom: 15px;
+}
+legend {
+	padding: 0 10px;
+	font: bold 140% Helvetica, Arial, Verdana, Tahoma;
+}
+ul {
+	list-style: none;
+}
+button {
+	display: none;
+}
+
+button:hover {
+	color: #fc0;
+}
+img {
+	border: 0;
+}
+
+address.sistema {
+	display: none;
+}
+address.relatorio {
+	font: normal 10px Verdana, Tahoma, Arial;
+}
+
+a:link, a:visited {
+	text-decoration: none;
+	color: #000;
+}
+a:hover {
+	color: #000;
+}
+
+/* ---------- DIVS DE POSIONAMENTO + UNICOS GERAIS ----------------------------------- */
+
+#corpo {
+	position: relative;
+}
+
+#topo {
+	position: relative;
+	height: 100px;
+	z-index: 3;
+	margin-bottom: 20px;
+/*	display:none;*/
+}
+#logo {
+	position: absolute;
+	top: -20px;
+}
+#cabecalho_impressao {
+	position: absolute;
+	right: 0;
+}
+#cabecalho_impressao h2 {
+	text-align: right;
+	line-height: 80%;
+}
+#infos_mesmo, #opcoes, #temp, #menu, #submenu, #logo span {
+	display:none;
+}
+
+#logo_empresa {
+	position: absolute;
+	top: 4px;
+	left: 210px;
+}
+
+#conteudo {
+
+}
+#botao_voltar {
+	display: none;
+}
+#rodape {
+	position: fixed;
+	width: 100%;
+	text-align: center;
+	bottom: -30px;
+}
+
+/* ---------- DIVS PAGINAS INTERNAS ------------------------------------------------------------- */
+
+#tela_mensagens, #tela_mensagens2 {
+	position: absolute;
+	right: 1px;
+	top: 70px;
+	padding: 5px;
+	width: 280px;
+	z-index: 5;
+	text-align: center;
+}
+#tela_mensagens2 {
+	top: 33px;
+}
+.atencao {
+	width: 100%;
+	height: 100%;
+	padding: 3px;
+	background: #fcd536;
+	color: #000;
+	font: bold 120% "Trebuchet MS";
+}
+
+#paginacao {
+	display: none;
+}
+
+/* ---------- CLASSES DIVERSAS ------------------------------------------------------------------- */
+
+.tamanho10 { width: 10px; }
+.tamanho15 { width: 15px; }
+.tamanho20 { width: 20px; }
+.tamanho30 { width: 30px; }
+.tamanho25p { width: 25%; }
+.tamanho40 { width: 40px; }
+.tamanho45 { width: 45px; }
+.tamanho50 { width: 50px; }
+.tamanho60 { width: 60px; }
+.tamanho70 { width: 70px; }
+.tamanho80 { width: 80px; }
+.tamanho100 { width: 100px; }
+.tamanho120 { width: 120px; }
+.tamanho160 { width: 160px; }
+.tamanho200 { width: 200px; }
+.tamanho300 { width: 300px; }
+
+.escondido {
+	display:none;
+}
+.vermelho {
+	color: #900;
+}
+.verde {
+	color: #390;
+}
+.azul {
+	color: #06c;
+}
+.fechar {
+	display:none;
+}
+
+.parte50, .parte50_lista {
+	position: relative;
+	width: 48%;
+	float: left;
+	margin: 0 1%;
+}
+.link_editar, .link_excluir, .link_trocar {
+	display: none;
+}
+.centro {
+	text-align: center
+}
+.recuo1 {
+	margin: 5px 0 10px 30px;
+}
+.recuo2 {
+	margin: 5px 0 10px 15px;
+}
+.abrange {
+	width: 40%;
+	font-weight: normal;
+	text-align:left;
+}
+.altura50 {
+	height: 60px;
+}
+.div_receita_ok {
+	position: relative;
+	padding: 5px;
+	margin-bottom: 2px;
+	border:solid 1px #d5ebb4;
+}
+.flutuar_esquerda {
+	float: left;
+}
+.tamanhoAuto {
+	width: auto;
+}
+.verde_transp {
+	background: url(images/verde_transp.png);
+}
+.amarelo_transp {
+	background: url(images/amarelo_transp.png);
+}
+
+.vermelho_transp {
+	background: url(images/vermelho_transp.png);
+}
+
+.quebra_linha {
+	float: none !important;
+}
+
+.titulo_rel {
+	text-align:center;
+	font-size:16px;
+	margin-top: 30px;
+}
+
+p {
+	margin: 2px 0 8px 0;
+	text-indent: 20px;
+}
+.com_label_grande label {
+	width: 100px;
+}
+
+.dest { font: bold 15px Helvetica, Arial, Verdana, Tahoma; letter-spacing: -1px; }
+
+/* ================== objetos nao impressos ===========================*/
+
+#link_aux {
+	display: none;
+}
+.menor {
+	font-size: 80%;
+}
+.screen {
+	display: none;
+}
+.partei {
+	position: relative;
+	width: 47%;
+	margin-right: 2%;
+	float: left;
+}
+.link_folder {
+	display: none;
+}
+.alinhar_esquerda {
+	text-align: left;
+}

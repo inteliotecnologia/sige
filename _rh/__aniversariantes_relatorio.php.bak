@@ -1,0 +1,47 @@
+<? if (pode("r", $_SESSION["permissao"])) { ?>
+
+<h2>Aniversariantes de <?= date("Y"); ?></h2>
+
+<? for($i=1; $i<13; $i++) { ?>
+
+<fieldset>
+	<legend><?= traduz_mes($i); ?></legend>
+    
+    <table cellspacing="0" width="100%">
+        <tr>
+            <th width="9%">Cód.</th>
+            <th width="17%" align="left">Empresa</th>
+            <th width="20%" align="left">Departamento</th>
+            <th width="36%" align="left">Nome</th>
+            <th width="18%" align="left">Data de nascimento</th>
+      </tr>
+        <?
+		$result = mysql_query("select *, DATE_FORMAT(pessoas.data, '%d/%m/%Y') as data_nasc2
+								from funcionarios, pessoas, carreiras
+								where funcionarios.id_pessoa = pessoas.id_pessoa
+								and   funcionarios.status_funcionario = '1'
+								and   carreiras.atual = '1'
+								and   funcionarios.id_funcionario = carreiras.id_funcionario
+								and   DATE_FORMAT(pessoas.data, '%m') = '". formata_saida($i, 2) ."'
+								order by DATE_FORMAT(pessoas.data, '%d') asc, pessoas.nome_rz asc
+								") or die(mysql_error());
+		
+        $j=0;
+        while ($rs= mysql_fetch_object($result)) {
+            if (($j%2)==0) $classe= "cor_sim";
+            else $classe= "cor_nao";
+    
+            $idade= calcula_idade($rs->data_nasc2);
+        ?>
+        <tr class="<?= $classe; ?> corzinha">
+            <td align="center"><?= $rs->id_funcionario; ?></td>
+            <td><?= pega_empresa($rs->id_empresa); ?></td>
+            <td><?= pega_departamento($rs->id_departamento); ?></td>
+            <td><?= $rs->nome_rz; ?></td>
+            <td><?= $rs->data_nasc2; ?></td>
+        </tr>
+        <? $j++; } ?>
+    </table>
+</fieldset>
+<? }//fim i de meses ?>
+<? } ?>

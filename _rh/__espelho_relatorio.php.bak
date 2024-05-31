@@ -1,0 +1,785 @@
+<?
+require_once("conexao.php");
+require_once("funcoes.php");
+
+define('FPDF_FONTPATH','includes/fpdf/font/');
+require("includes/fpdf/fpdf.php");
+
+	class PDF extends FPDF {
+		//Page header
+		function Header() {
+		    //Title
+			$this->Image("". CAMINHO ."empresa_". $_SESSION["id_empresa"] .".jpg", 0.5, 0.3, 5, 1.9287);
+		} 
+
+		//Page footer
+		function Footer() {
+			$this->SetXY(0.5,27.5);
+			$this->SetFont('ARIALNARROW', '', 11);
+			$this->Cell(19, 1, "Esterilav - Lavação e Esterilização Hospitalar", 0 , 1, "L");			
+		}
+	}
+	
+	$result_empresa= mysql_query("select * from  pessoas, enderecos, empresas, cidades, ufs
+									where empresas.id_empresa = '". $_SESSION["id_empresa"] ."'
+									and   empresas.id_pessoa = pessoas.id_pessoa
+									and   pessoas.id_pessoa = enderecos.id_pessoa
+									and   enderecos.id_cidade = cidades.id_cidade
+									and   cidades.id_uf = ufs.id_uf
+									") or die(mysql_error());
+	$rs_empresa= mysql_fetch_object($result_empresa);
+	
+	if ( ($_GET["data1"]!="") && ($_GET["data2"]!="") ) {
+		$data1= formata_data_hifen($_GET["data1"]); $data1f= $_GET["data1"];
+		$data2= formata_data_hifen($_GET["data2"]); $data2f= $_GET["data2"];
+		
+		$data1_mk= faz_mk_data($data1);
+		$data2_mk= faz_mk_data($data2);
+	}
+	else {
+		$periodo= explode('/', $_GET["periodo"]);
+		
+		$data1_mk= mktime(0, 0, 0, $periodo[0]-1, 26, $periodo[1]);
+		$data2_mk= mktime(0, 0, 0, $periodo[0], 25, $periodo[1]);
+		
+		$data1= date("Y-m-d", $data1_mk);
+		$data2= date("Y-m-d", $data2_mk);
+		
+		$data1f= desformata_data($data1);
+		$data2f= desformata_data($data2);
+	}
+	
+	$pdf=new PDF("L", "cm", "A4");
+	$pdf->SetLeftMargin(0.5);
+	$pdf->SetRightMargin(0.5);
+	$pdf->SetAutoPageBreak(true, 1);
+	$pdf->SetFillColor(230,230,230);
+	$pdf->AddFont('ARIALNARROW');
+	$pdf->AddFont('ARIAL_N_NEGRITO');
+	$pdf->AddFont('ARIAL_N_ITALICO');
+	$pdf->AddFont('ARIAL_N_NEGRITO_ITALICO');
+	$pdf->SetFont('ARIALNARROW');
+	
+	if ($_GET["id_funcionario"]!="") $str .= " and   funcionarios.id_funcionario =  '". $_GET["id_funcionario"] ."'";
+	else $str= " and   funcionarios.id_empresa =  '". $_SESSION["id_empresa"] ."'";
+	
+	if ($_GET["id_departamento"]!="") $str .= " and   carreiras.id_departamento =  '". $_GET["id_departamento"] ."'";
+	if ($_GET["id_turno"]!="") $str .= " and   carreiras.id_turno =  '". $_GET["id_turno"] ."'";
+	
+	$result= mysql_query("select * from  pessoas, funcionarios, carreiras, turnos
+								where pessoas.id_pessoa = funcionarios.id_pessoa
+								". $str ."
+								and   funcionarios.status_funcionario = '1'
+								and   carreiras.id_funcionario = funcionarios.id_funcionario
+								and   carreiras.atual = '1'
+								and   carreiras.id_turno = turnos.id_turno
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+	$i=0;
+	while ($rs= mysql_fetch_object($result)) {
+		
+		//setando variáveis que são de cada funcionário
+		$total_he_normais_60[0]= 0; $total_he_normais_60[1]= 0;
+		$total_he_normais_100[0]= 0; $total_he_normais_100[1]= 0;
+		$total_he_dsr[0]= 0; $total_he_dsr[1]= 0;
+		$total_he_folga[0]= 0; $total_he_folga[1]= 0;
+		$total_he_feriado[0]= 0; $total_he_feriado[1]= 0;
+		$total_faixa[0]= 0; $total_faixa[1]= 0;
+		
+		$id_funcionario= $rs->id_funcionario;
+		$id_turno= $rs->id_turno;
+		
+		$pdf->AddPage();
+		
+		$pdf->SetXY(23.5, 0.3);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+		$pdf->Cell(6, 1, "Relatório - Espelho do Cartão", 0, 0, "C");
+		$pdf->SetFont('ARIALNARROW', '', 9);
+		
+		$pdf->SetXY(18.7, 0.95);
+		$pdf->Cell(8, 0.8, "EM CONFORMIDADE COM A PORTARIA DO MTb N.º 3.626, DE 13/11/1991, ART. 13.", 0 , 1);
+		
+		$pdf->SetXY(6,0.6);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+		$pdf->Cell(2, 0.5, $rs_empresa->nome_rz , 0 , 1);
+		
+		$pdf->SetX(6);
+		$pdf->SetFont('ARIALNARROW', '', 9);$pdf->SetFont('ARIALNARROW', '', 9);
+		$pdf->Cell(2.9, 0.5, $rs_empresa->rua, 0 , 0);
+		$pdf->Cell(0.6, 0.5, $rs_empresa->numero, 0 , 0);
+	
+		$pdf->Cell(3.3, 0.5, $rs_empresa->complemento, 0 , 0);
+		$pdf->Cell(2, 0.5, "BAIRRO ". $rs_empresa->bairro, 0 , 1);
+		
+		$pdf->SetX(6);
+		
+		$pdf->Cell(1.3, 0.45, $rs_empresa->cidade .'/'. $rs_empresa->uf, 0 , 0);
+	
+		$pdf->SetX(13.3);
+		$pdf->Cell(1, 0.45, $rs_empresa->cep, 0 , 0);
+		
+		//---------------------------------------------------------------------------
+		//DADOS FUNCIONÁRIO
+		
+		$pdf->SetXY(0.5,2.7);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(1.9, 0.4, "FUNCIONÁRIO(A):", 0 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(5, 0.4, $rs->nome_rz, 0 , 0);
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(1.9, 0.4, "DEPARTAMENTO:", 0 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(4, 0.4, pega_departamento($rs->id_departamento), 0 , 0);
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(1, 0.4, "CARGO:", 0 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(4, 0.4, pega_cargo($rs->id_cargo), 0 , 0);
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(1.9, 0.4, "MATR. EMPRESA:", 0 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(3, 0.4, $id_funcionario, 0 , 0);
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(2.6, 0.4, "MATR. CONTABILIDADE:", 0 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(3, 0.4, $rs->matr_cont, 0 , 0);
+		
+		$pdf->SetXY(0.5,2.4);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(10, 0.4, "CONTROLE DE FREQÜÊNCIA AO TRABALHO NO PERÍODO DE " . $_GET["data1"] . " À " . $_GET["data2"], 0 , 0);
+		
+		//INICIO DA TABELA DE HORAS DO TURNO DO FUNCIONARIO
+		$pdf->SetXY(0.5,17.2);
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(2.2, 0.35, "TURNO: ", 1 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(2.6, 0.35, pega_turno($id_turno), 1 , 1);
+		
+		$pdf->SetX(0.5);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(2.2, 0.35, "REGIME:", 1 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(2.6, 0.35, pega_regime_turno($rs->id_regime), 1 , 1);
+		
+		$pdf->SetX(0.5);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(2.2, 0.35, "CARGA HORÁRIA:", 1 , 0);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(2.6, 0.35, "220 HORAS/MÊS", 1 , 1);
+	
+		$pdf->SetXY(5.7,17.2);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(2, 0.3, "DIA DA SEMANA", 1 , 0, "C");
+		$pdf->Cell(1.2, 0.3, "ENTRADA", 1 , 0, "C");
+		$pdf->Cell(1.6, 0.3, "INTERVALO", 1 , 0, "C");
+		$pdf->Cell(1.2, 0.3, "SAÍDA", 1 , 1, "C");
+		
+		$pdf->SetX(10);
+		
+		for ($i=0; $i<=6; $i++) {
+			$result_dia= mysql_query("select * from turnos_horarios
+										where id_turno = '". $id_turno ."'
+										and   id_dia = '$i'
+										");
+			$rs_dia= mysql_fetch_object($result_dia);
+			
+			$jornada_entrada_hora= explode(':', $rs_dia->entrada);
+			$jornada_saida_hora= explode(':', $rs_dia->saida);
+			
+			$m_jornada= 10; $a_jornada= 2008;
+			
+			//if ($rs_dia->hl==1) $d_jornada=10;
+			//else
+			$d_jornada= 10;
+			
+			$jornada_entrada[$i]= @mktime($jornada_entrada_hora[0], $jornada_entrada_hora[1], $jornada_entrada_hora[2], $m_jornada, $d_jornada, $a_jornada);
+			$jornada_saida[$i]= @mktime($jornada_saida_hora[0], $jornada_saida_hora[1], $jornada_saida_hora[2], $m_jornada, $d_jornada, $a_jornada);
+			
+			$pdf->SetX(5.7);
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+			$pdf->Cell(2, 0.3, strtoupper(traduz_dia($i)), 1 , 0, "C");
+			$pdf->SetFont('ARIALNARROW', '', 7);
+			$pdf->Cell(1.2, 0.3, substr($rs_dia->entrada, 0, 5), 1 , 0, "C");
+			$pdf->Cell(1.6, 0.3, pega_detalhes_intervalo($rs->id_intervalo, $i, 0), 1 , 0, "C");
+			$pdf->Cell(1.2, 0.3, substr($rs_dia->saida, 0, 5), 1 , 1, "C");
+			
+		}
+		
+		// ------------- tabela
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		
+		$pdf->SetXY(0.5,3.2);
+		$pdf->Cell(1, 0.7, "DIA", 1 , 0, "C");
+		$pdf->Cell(1.2, 0.7, "SEMANA", 1 , 0, "C");
+		
+		$j=1;
+		$num_operacoes= 4;
+		
+		for ($i=1; $i<($num_operacoes*2)+1; $i++) {
+			if (($i%2)==0) $operacao= "SAÍDA";
+			else $operacao= "ENTRADA";
+		
+			$pdf->Cell(2.15, 0.7, $operacao .' '. $j, 1 , 0, "C");
+		
+			if (($i%2)==0) $j++;
+		}
+	
+		$pdf->Cell(3.2, 0.7, "MOTIVO", 1 , 0, "C");
+		$pdf->SetXY(23.1,3.2);
+		$pdf->Cell(2.5, 0.35, "HORAS TRABALHADAS", 1 , 1, "C");
+		$pdf->SetX(23.1);
+		$pdf->Cell(1.25, 0.35, "DIURNO", 1 , 0, "C");
+		$pdf->Cell(1.25, 0.35, "NOTURNO", 1 , 0, "C");
+		$pdf->SetXY(25.6,3.2);
+		$pdf->Cell(1, 0.7, "FALTAS", 1 , 0, "C");
+		$pdf->SetXY(26.6,3.2);
+		$pdf->Cell(2.5, 0.35, "HORAS EXTRAS", 1, 1, "C");
+		$pdf->SetX(26.6);
+		$pdf->Cell(1.25, 0.35, "DIURNO", 1 , 0, "C");
+		$pdf->Cell(1.25, 0.35, "NOTURNO", 1 , 1, "C");
+		
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		
+		$diferenca= date("d", $data2_mk-$data1_mk);
+		$erro=0;
+		
+		$total_horas_diurnas=0;
+		$total_horas_noturnas=0;
+		$total_faltas=0;
+		$total_extras_diurnas=0;
+		$total_extras_noturnas=0;
+		
+		$saldo_extras_diurnas=0;
+		$saldo_extras_noturnas=0;
+		
+		//repetir todos os dias do intervalo
+		for ($d= 0; $d<=$diferenca; $d++) {
+			$extras_diurnas=0;
+			$extras_noturnas=0;
+			
+			$total_saidas[$d]= 0;
+			
+			$e= $d+1;
+			$calculo_data= $data1_mk+(86400*$d);
+			
+			$dia= date("d/m", $calculo_data);
+			$data= date("d/m/Y", $calculo_data);
+			$id_dia= date("w", $calculo_data);
+			$vale_dia= date("Y-m-d", $calculo_data);
+			
+			$result_adm= mysql_query("select * from carreiras
+										where id_funcionario = '". $id_funcionario ."'
+										and   id_acao_carreira = '1'
+										") or die(mysql_error());
+			$linhas_admissao= mysql_num_rows($result_adm);
+			
+			if ($linhas_admissao>0) {
+				$rs_adm= mysql_fetch_object($result_adm);
+				//echo $rs_adm->data; die();
+				$data_admissao_mk= faz_mk_data($rs_adm->data);
+			}
+			
+			//se a data atual for maior ou igual a data de admissao === ELE JÁ É FUNCIONÁRIO DA EMPRESA
+			if ($calculo_data>=$data_admissao_mk) {
+			
+				//se sábado ou domingo
+				if ($id_dia==0) {
+					$fill=1;
+					$pdf->SetFillColor(210,210,210);
+				}
+				else {
+					 if ($id_dia==6) {
+						$fill=1;
+						$pdf->SetFillColor(235,235,235);
+					 }
+					 else $fill= 0;
+				}
+				
+				$pdf->Cell(1, 0.4, $dia, 1 , 0, "C", $fill);
+				$pdf->Cell(1.2, 0.4, strtoupper(traduz_dia($id_dia)), 1 , 0, "C", $fill);
+				
+				$result_hor= mysql_query("select *, DATE_FORMAT(data_batida, '%d/%m/%Y') as data_batida2
+											from ponto
+											where vale_dia= '$vale_dia'
+											and   id_funcionario = '". $id_funcionario ."'
+											order by data_batida, hora
+											");
+				$total_operacoes= mysql_num_rows($result_hor);
+				
+				$h=0;
+				$z=0;
+				$m= 0;
+				unset($entrada); unset($saida);
+				
+				while ($rs_hor= mysql_fetch_object($result_hor)) {
+					$horario[$z]= faz_mk_data_completa($rs_hor->data_batida2 .' '. $rs_hor->hora);
+										
+					if (($rs_hor->tipo==0) && ($rs->id_regime==2)) {
+						$total_saidas[$d]++;
+						//echo $total_saidas[$d];
+						//echo $intervalo_automatico[0] ." - ";
+						//echo $intervalo_automatico[1];
+						//echo $atual;
+						
+						if ( (($total_operacoes/$total_saidas[$d])==2) ) {
+							//passando
+							$intervalo_automatico= retorna_intervalo_automatico($horario[$z-1], $horario[$z]);
+							
+							for ($p=0; $p<2; $p++) {
+								//se tem, pelo menos 5:40 trabalhadas... faz o intervalo
+								if ($horario[$z]-$horario[$z-1]>=7200) {
+									$pdf->Cell(2.15, 0.4, date("d/m/Y H:i:s", $intervalo_automatico[$p]), 1 , 0, "C", $fill);
+									$h++;
+								}
+							}
+						}//fim 
+					}
+					
+					//*--------------------------------------------------------
+					
+					$pdf->Cell(2.15, 0.4, $rs_hor->data_batida2 ." ". $rs_hor->hora, 1 , 0, "C", $fill);
+					
+					$data_hora_batida= $rs_hor->data_batida ." ". $rs_hor->hora;
+					
+					if ($rs_hor->tipo==1) $entrada[$m]= $data_hora_batida;
+					else {
+						$saida[$m]= $data_hora_batida;
+						$m++;
+					}
+	
+					$z++;
+					$h++;
+				}//fim while horarios
+				
+				if (($total_operacoes%2)==1) {
+					$erro=1;
+					$pdf->SetTextColor(153, 0, 0);
+					$pdf->Cell(2.15, 0.4, "ERRO", 1 , 0, "C", $fill);
+					$pdf->SetTextColor(0, 0, 0);
+					$h++;
+				}
+				
+				for ($i=$h; $i<($num_operacoes*2); $i++)
+					$pdf->Cell(2.15, 0.4, "-", 1 , 0, "C", $fill);
+				
+				//--- consultando escala
+				
+				$result_esc= mysql_query("select * from escala
+											where id_funcionario = '". $id_funcionario ."'
+											and   data_escala = '". $vale_dia ."'
+											") or die(mysql_error());
+				$linhas_escala= mysql_num_rows($result_esc);
+				
+				$result_feriado= mysql_query("select * from feriados
+											where id_empresa = '". $_SESSION["id_empresa"] ."'
+											and   data_feriado = '". $vale_dia ."'
+											") or die(mysql_error());
+				$linhas_feriado= mysql_num_rows($result_feriado);
+				
+				//se nao bateu o ponto nesse dia
+				if ($total_operacoes==0) {
+					$result_afa= mysql_query("select * from afastamentos_dias
+												where id_funcionario = '". $id_funcionario ."'
+												and   data = '". $vale_dia ."'
+												") or die(mysql_error());
+					$linhas_afastamento= mysql_num_rows($result_afa);
+					
+					if ($linhas_afastamento>0) {
+						$rs_afa= mysql_fetch_object($result_afa);
+						$tipo_afastamento= pega_tipo_afastamento_pelo_id_afastamento($rs_afa->id_afastamento);
+						
+						$motivo= strtoupper(pega_tipo_afastamento($tipo_afastamento));
+					}
+					else {
+						if ($linhas_escala==1)
+							$motivo= "FALTA";
+						else {
+							if (($id_dia==0) || ($id_dia==6))
+								$motivo= "DSR";
+							else
+								$motivo= "FOLGA";
+						}
+					}
+					
+					$horas_diurnas= 0;
+					$horas_noturnas= 0;
+					$extras_diurnas= 0;
+					$extras_noturnas= 0;
+				}
+				//se tem batidas neste dia
+				else {
+					$motivo= "";
+					
+					$horas_trabalhadas= calcula_diurno_noturno($entrada, $saida);
+					
+					$horas_diurnas= $horas_trabalhadas[0];
+					$horas_noturnas= $horas_trabalhadas[1];
+					
+					//se não deveria trabalhar este dia, é hora extra
+					if (($linhas_escala==0) || ($linhas_feriado==1)) {
+						$extras_diurnas= $horas_diurnas;
+						$extras_noturnas= $horas_noturnas;
+						
+						//se for feriado, computa para horas extras em dsr
+						if ($linhas_feriado==1) {
+							$motivo= "HE (FERIADO)";
+							$total_he_feriado[0]+= $extras_diurnas;
+							$total_he_feriado[1]+= $extras_noturnas;
+						}
+						else {
+							//se for fim de semana, computa para horas extras em dsr
+							if (($id_dia==0) || ($id_dia==6)) {
+								$motivo= "HE (DSR)";
+								$total_he_dsr[0]+= $extras_diurnas;
+								$total_he_dsr[1]+= $extras_noturnas;
+							}
+							//dia de semana, horas extras em folgas
+							else {
+								$motivo= "HE (FOLGA)";
+								$total_he_folga[0]+= $extras_diurnas;
+								$total_he_folga[1]+= $extras_noturnas;
+							}
+						}
+					}
+					//se trabalha este dia, são horas normais
+					else {
+						$extras_diurnas= 0;
+						$extras_noturnas= 0;
+					}
+				}
+				
+				$total_horas_diurnas += $horas_diurnas;
+				$total_horas_noturnas += $horas_noturnas;
+				
+				$jornada_diaria= pega_jornada_diaria($id_turno, $id_dia);
+				$total_horas= $horas_diurnas+$horas_noturnas;
+				
+				$intervalo_dia= pega_duracao_intervalo_dia($id_turno, $id_dia);
+				if ($intervalo_dia!=0) $jornada_diaria= $jornada_diaria-$intervalo_dia;
+				
+				//se a pessoa trabalha neste dia, calcula a falta
+				
+				if (($linhas_escala==1) && ($linhas_feriado==0)) $calculo_faltas= $jornada_diaria-$total_horas;
+				else $calculo_faltas= 0;
+				
+				//se trabalhou mais que a carga horária
+				if ($calculo_faltas<=0) {
+					$falta_string= "00:00:00";
+					$falta_dia= 0;
+				}
+				else {
+					//se veio trabalhar
+					if ($total_operacoes>0) {
+					//if ($motivo=="") {
+						//20 minutos de atraso (entrada e saída)
+						$desconto= 1200;
+						//se o dia tem um intervalo de batida (adiciona mais 20minutos)
+						if ($intervalo_dia!=0) {
+							//$jornada_diaria= $jornada_diaria+$intervalo_dia;
+							$desconto+=1200;
+						}
+						
+						//se faltou até o limite (20 minutos ou 40, dependendo da batida)
+						if ($calculo_faltas<=$desconto) {
+							$falta_string= "00:00:00";
+							$falta_dia= 0;
+						}
+						else {
+							$falta_string= date("H:i:s", mktime(0, 0, $calculo_faltas, 0, 0, 0));
+							$falta_dia= $calculo_faltas;
+						}
+					}
+					//se não veio trabalhar, mas a falta foi justificada
+					else {
+						if ($motivo=="FALTA") {
+							if ($intervalo_dia!=0)
+								$jornada_diaria= $jornada_diaria;//+$intervalo_dia;
+							
+							$falta_string= date("H:i:s", mktime(0, 0, $jornada_diaria, 0, 0, 0));
+							$falta_dia= $jornada_diaria;
+						}
+						else {
+							$falta_string= "00:00:00";
+							$falta_dia= 0;
+						}
+					}
+				}
+				$total_faltas += $falta_dia;
+				
+				// --------------------------------------------------------------------------- calculo de horas extras
+				//echo date("H:i:s", mktime(0, 0, $adicional, 0, 0, 0)); die();
+				//echo date("d/m/Y H:i:s", $jornada_entrada[$id_dia]); die();
+				$entrada_aqui[0]= date("Y-m-d H:i:s", $jornada_entrada[$id_dia]);
+				$saida_aqui[0]= date("Y-m-d H:i:s", $jornada_saida[$id_dia]);
+				
+				$horas_jornada_periodo= calcula_diurno_noturno($entrada_aqui, $saida_aqui);
+				
+				//echo $horas_diurnas; die();
+				//echo $horas_jornada_periodo[0] ." | ";
+				//echo $horas_jornada_periodo[1] . " <br> "; die();
+				
+				if ($intervalo_dia!=0) $jornada_diaria_para_extra= $jornada_diaria+$intervalo_dia;
+				else $jornada_diaria_para_extra= $jornada_diaria;
+				
+				$total_horas_trabalhadas_dia= $horas_diurnas+$horas_noturnas;
+				$diferenca_horas_trabalhadas_jornada= $total_horas_trabalhadas_dia-$jornada_diaria_para_extra;
+				
+				//echo $total_horas_trabalhadas_dia; die();
+				
+				//se o total de horas que foi trabalhada for maior que a jornada diária, a sobra é hora extra
+				if (($diferenca_horas_trabalhadas_jornada>=1200) && ($extras_diurnas==0) && ($extras_noturnas==0)) {
+					//trabalha no periodo diurno
+					//if ($horas_jornada_periodo[0]>0)
+						
+						//$extras_diurnas= $diferenca_horas_trabalhadas_jornada;
+						$extras_diurnas= $horas_diurnas-$horas_jornada_periodo[0];
+						if ($extras_diurnas<=1200) $extras_diurnas= 0;
+						
+						$extras_noturnas= $horas_noturnas-$horas_jornada_periodo[1];
+						if ($extras_noturnas<=1200) $extras_noturnas= 0;
+				}
+				else {
+					if (($extras_diurnas==0) && ($extras_noturnas==0)) {
+						$extras_diurnas=0;
+						$extras_noturnas=0;
+					}
+				}
+					
+				
+				//echo $horas_trabalhadas_aqui[0] ."|"; //total de horas diurnas da jornada
+				//echo $horas_trabalhadas_aqui[1]; //total de horas noturnas da jornada
+				
+				//die();
+				
+				//date("H:i:s", mktime(0, 0, $jornada_diaria, 0, 0, 0))
+				
+				$pdf->Cell(3.2, 0.4, $motivo, 1 , 0, "C", $fill);
+				$pdf->Cell(1.25, 0.4, date("H:i:s", mktime(0, 0, $horas_diurnas, 0, 0, 0)), 1 , 0, "C", $fill);
+				$pdf->Cell(1.25, 0.4, date("H:i:s", mktime(0, 0, $horas_noturnas, 0, 0, 0)), 1 , 0, "C", $fill);
+				$pdf->Cell(1, 0.4, $falta_string, 1 , 0, "C", $fill);
+				
+				if ($extras_diurnas>0) {
+					//procurar no banco de horas algo referente a este dia
+					$result_bhd= mysql_query("select sum(he) as total_horas_dia from ponto_banco
+												where id_funcionario = '". $id_funcionario ."'
+												and   id_empresa = '". $_SESSION["id_empresa"] ."'
+												and   data_he = '". $vale_dia ."'
+												and   tipo_he = '0'
+												") or die(mysql_error());
+					$rs_bhd= mysql_fetch_object($result_bhd);
+					
+					if ($rs_bhd->total_horas_dia>0) {
+						$fill=1;
+						$pdf->SetFillColor(100,100,100);
+						$pdf->SetTextColor(255,255,255);
+						
+						$saldo_extras_diurnas= $extras_diurnas-$rs_bhd->total_horas_dia;
+						
+						//aqui ele desconta do geral o banco de horas diurnas............
+						
+						//$total_he_normais_60[0]-= $rs_bhd->total_horas_dia;
+						//$total_he_normais_100[0]-= $rs_bhd->total_horas_dia;
+						if ($total_he_dsr[0]>0) $total_he_dsr[0]-= $rs_bhd->total_horas_dia;
+						if ($total_he_folga[0]>0) $total_he_folga[0]-= $rs_bhd->total_horas_dia;
+						if ($total_he_feriado[0]>0) $total_he_feriado[0]-= $rs_bhd->total_horas_dia;
+					}
+					else
+						$saldo_extras_diurnas= $extras_diurnas;
+					
+					//echo $rs_bhd->total_horas_dia ."<br>";
+				}
+				else $saldo_extras_diurnas= $extras_diurnas;
+				
+				$pdf->Cell(1.25, 0.4, date("H:i:s", mktime(0, 0, $saldo_extras_diurnas, 0, 0, 0)), 1 , 0, "C", $fill);
+				
+				$pdf->SetTextColor(0,0,0);
+				//se sábado ou domingo
+				if ($id_dia==0) {
+					$fill=1;
+					$pdf->SetFillColor(210,210,210);
+				}
+				else {
+					 if ($id_dia==6) {
+						$fill=1;
+						$pdf->SetFillColor(235,235,235);
+					 }
+					 else $fill= 0;
+				}
+				
+				if ($extras_noturnas>0) {
+					//procurar no banco de horas algo referente a este dia
+					$result_bhn= mysql_query("select sum(he) as total_horas_dia from ponto_banco
+												where id_funcionario = '". $id_funcionario ."'
+												and   id_empresa = '". $_SESSION["id_empresa"] ."'
+												and   data_he = '". $vale_dia ."'
+												and   tipo_he = '1'
+												") or die(mysql_error());
+					$rs_bhn= mysql_fetch_object($result_bhn);
+					
+					if ($rs_bhn->total_horas_dia>0) {
+						$fill=1;
+						$pdf->SetFillColor(100,100,100);
+						$pdf->SetTextColor(255,255,255);
+						
+						$saldo_extras_noturnas= $extras_noturnas-$rs_bhn->total_horas_dia;
+						
+						//aqui ele desconta do geral o banco de horas noturnas............
+						//$total_he_normais_60[1]-= $rs_bhn->total_horas_dia;
+						//$total_he_normais_100[1]-= $rs_bhn->total_horas_dia;
+						if ($total_he_dsr[1]>0) $total_he_dsr[1]-= $rs_bhn->total_horas_dia;
+						if ($total_he_folga[1]>0) $total_he_folga[1]-= $rs_bhn->total_horas_dia;
+						if ($total_he_feriado[1]>0) $total_he_feriado[1]-= $rs_bhn->total_horas_dia;
+					}
+					else
+						$saldo_extras_noturnas= $extras_noturnas;
+				}
+				else $saldo_extras_noturnas= $extras_noturnas;
+				
+				$pdf->Cell(1.25, 0.4, date("H:i:s", mktime(0, 0, $saldo_extras_noturnas, 0, 0, 0)), 1 , 1, "C", $fill); 
+				//FIM DA TABELA DE HORARIOS BATIDOS
+				
+				$pdf->SetTextColor(0,0,0);
+				
+				//se sábado ou domingo
+				if ($id_dia==0) {
+					$fill=1;
+					$pdf->SetFillColor(210,210,210);
+				}
+				else {
+					 if ($id_dia==6) {
+						$fill=1;
+						$pdf->SetFillColor(235,235,235);
+					 }
+					 else $fill= 0;
+				}			
+				
+				$total_extras_diurnas += $saldo_extras_diurnas;
+				$total_extras_noturnas += $saldo_extras_noturnas;
+				
+				$primeira_faixa= 7200;
+				
+				//se for um dia comum (nao feriado, nao dsr, nao folga)
+				if (($linhas_feriado==0) && ($linhas_escala==1)) {
+					if ($extras_diurnas>$primeira_faixa) {
+						$total_he_normais_60[0]+= $primeira_faixa;
+						$total_he_normais_100[0]+= $extras_diurnas-$primeira_faixa;
+					}
+					else {
+						$total_he_normais_60[0]+= $extras_diurnas;
+						$total_he_normais_100[0]+= 0;
+					}
+					
+					if ($extras_noturnas>$primeira_faixa) {
+						$total_he_normais_60[1]+= $primeira_faixa;
+						$total_he_normais_100[1]+= $extras_noturnas-$primeira_faixa;
+					}
+					else {
+						$total_he_normais_60[1]+= $extras_noturnas;
+						$total_he_normais_100[1]+= 0;
+					}
+				}
+				$i++;
+			}//FIM DO IF SE JÁ TRABALHA NA EMPRESA
+		}//fim dos dias
+		
+		$pdf->SetX(19.9);
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->Cell(3.2, 0.4, "TOTAL:", 1 , 0, "C");
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		
+		$pdf->Cell(1.25, 0.4, calcula_total_horas($total_horas_diurnas), 1 , 0, "C");
+		$pdf->Cell(1.25, 0.4, calcula_total_horas($total_horas_noturnas), 1 , 0, "C");
+		$pdf->Cell(1, 0.4, calcula_total_horas($total_faltas), 1 , 0, "C");
+		$pdf->Cell(1.25, 0.4, calcula_total_horas($total_extras_diurnas), 1 , 0, "C");
+		$pdf->Cell(1.25, 0.4, calcula_total_horas($total_extras_noturnas), 1 , 0, "C");
+		
+		$pdf->SetXY(21.2, 17.8);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(7, 0.3, "DECLARO QUE ESTOU DE ACORDO E SÃO VERDADEIRAS", 0 , 1, "L");
+		$pdf->SetX(21.2);
+		$pdf->Cell(7, 0.3, "AS MARCAÇÕES DE HORÁRIOS ACIMA RELACIONADAS.", 0 , 1, "L");
+		$pdf->SetXY(21.2, 19.4);
+		$pdf->Cell(7, 0.3, "ASSINATURA: __________________________________________________", 0 , 1, "L");
+	
+	/*
+		$pdf->AddPage();
+		$pdf->SetXY(7,1.5);
+		$pdf->Cell(7, 0.3, "ESTATÍSTICAS E ERROS ENCONTRADOS", 0 , 1, "L");
+		$pdf->SetXY(1,2.5);
+		$num = $func_cont_total - 2;
+		$numero_total_funcs = "TOTAL DE FUNCIONÁRIOS ATIVOS, SELECIONADOS PARA ESTE RELATÓRIO: " . $num;
+		$pdf->Cell(7, 0.6, $numero_total_funcs, 0 , 1, "L");	
+		$total_erros = sizeof($funcionarios_com_erro);
+		$erros = "DESTES " . $num . " FUNCIONÁRIOS, " . $total_erros . " POSSUÍAM ERROS, DESTA FORMA NÃO FOI POSSÍVEL GERAR SEUS RESPECTIVOS RELATÓRIOS";
+		$pdf->Cell(7, 0.6, $erros, 0 , 1, "L");
+		$pdf->Cell(7, 1, "O RELATÓRIO DOS SEGUINTES FUNCIONÁRIOS NÃO FORAM IMPRESSOS POR POSSUÍREM ERROS: ", 0 , 1, "L");	
+	  */
+	
+	//tabela de cálculo de horas extras
+	$pdf->SetXY(12.1, 17.2);
+	$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+	$pdf->Cell(3.2, 0.3, "EXTRAS DIURNAS", 1 , 0, "C");
+	$pdf->Cell(3.2, 0.3, "EXTRAS NOTURNAS", 1 , 1, "C");
+	$pdf->SetFont('ARIALNARROW', '', 7);
+	
+	$total_faixa60[0]= $total_he_normais_60[0];
+	$total_faixa60[1]= $total_he_normais_60[1];
+	
+	$total_faixa100[0]= $total_he_normais_100[0]+$total_he_dsr[0]+$total_he_folga[0]+$total_he_feriado[0];
+	$total_faixa100[1]= $total_he_normais_100[1]+$total_he_dsr[1]+$total_he_folga[1]+$total_he_feriado[1];
+	
+	for ($i=0; $i<2; $i++) {
+		if ($i==0) {
+			$x= 12.1; $y= 17.5;
+			$faixa= 60;
+		}
+		else {
+			$x= 15.3; $y= 17.5;
+			$faixa= 100;
+		}
+		
+		$pdf->SetXY($x, $y);
+		$pdf->Cell(2, 0.3, "NORMAIS 60%", 1 , 0, "L");
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_he_normais_60[$i]), 1 , 0, "C");
+		
+		$pdf->SetXY($x, $y+0.3);
+		$pdf->Cell(2, 0.3, "NORMAIS 100%", 1 , 0, "L");
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_he_normais_100[$i]), 1 , 1, "C");
+
+		$pdf->SetXY($x, $y+0.6);
+		$pdf->Cell(2, 0.3, "DSR 100%", 1 , 0, "L");
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_he_dsr[$i]), 1 , 1, "C");
+		
+		$pdf->SetXY($x, $y+0.9);
+		$pdf->Cell(2, 0.3, "FOLGA 100%", 1 , 0, "L");
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_he_folga[$i]), 1 , 1, "C");
+		
+		$pdf->SetXY($x, $y+1.2);
+		$pdf->Cell(2, 0.3, "FERIADO 100%", 1 , 0, "L");
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_he_feriado[$i]), 1 , 1, "C");
+		
+		$pdf->SetFillColor(235,235,235);
+		$fill= 1;
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->SetXY($x, $y+1.5);
+		$pdf->Cell(2, 0.3, "TOTAL 60%", 1 , 0, "L", $fill);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_faixa60[$i]), 1 , 1, "C", $fill);
+		
+		$pdf->SetFont('ARIAL_N_NEGRITO', '', 7);
+		$pdf->SetXY($x, $y+1.8);
+		$pdf->Cell(2, 0.3, "TOTAL 100%", 1 , 0, "L", $fill);
+		$pdf->SetFont('ARIALNARROW', '', 7);
+		$pdf->Cell(1.2, 0.3, calcula_total_horas($total_faixa100[$i]), 1 , 1, "C", $fill);
+	}
+	
+    }//fim while funcionarios
+	
+	$pdf->Output("espelho_relatorio_". date("d-m-Y_H:i:s") .".pdf", "I");
+?>

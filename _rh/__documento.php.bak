@@ -1,0 +1,1414 @@
+<?
+require_once("conexao.php");
+require_once("funcoes.php");
+
+$_SESSION["id_empresa_atendente2"]= 4;
+
+if (pode_algum("mrhv", $_SESSION["permissao"])) {
+	define('FPDF_FONTPATH','includes/fpdf/font/');
+	require("includes/fpdf/fpdf.php");
+	require("includes/fpdf/modelo_retrato.php");
+
+	$result_empresa= mysql_query("select * from  pessoas, rh_enderecos, empresas, cidades, ufs
+									where empresas.id_empresa = '". $_SESSION["id_empresa_atendente2"] ."'
+									and   empresas.id_pessoa = pessoas.id_pessoa
+									and   pessoas.id_pessoa = rh_enderecos.id_pessoa
+									and   rh_enderecos.id_cidade = cidades.id_cidade
+									and   cidades.id_uf = ufs.id_uf
+									") or die(mysql_error());
+	$rs_empresa= mysql_fetch_object($result_empresa);
+		
+	$pdf=new PDF("P", "cm", "A4");
+	$pdf->SetMargins(2, 3, 2);
+	$pdf->SetAutoPageBreak(true, 3);
+	$pdf->SetFillColor(230,230,230);
+	$pdf->AddFont('ARIALNARROW');
+	$pdf->AddFont('ARIAL_N_NEGRITO');
+	$pdf->AddFont('ARIAL_N_ITALICO');
+	$pdf->AddFont('ARIAL_N_NEGRITO_ITALICO');
+	$pdf->SetFont('ARIALNARROW');
+	
+	$i=0;
+	
+	//echo $_GET["tipo"];
+	
+	switch($_GET["tipo"]) {
+		//contrato de experiencia
+		case 2:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "PRORROGAÇÃO DO CONTRATO DE EXPERIÊNCIA", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATANTE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs_empresa->nome_rz, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATADO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0 , 1);
+			$pdf->Ln();
+			
+			$data= desformata_data($rs->data);
+			$data30= soma_data($data, 30, 0, 0);
+			$data31= soma_data($data30, 1, 0, 0);
+			$data90= soma_data($data, 90, 0, 0);
+			
+			//$pdf->MultiCell(0, 0.6, "               Pelo presente termo de prorrogação de contrato de trabalho, fica prorrogado o prazo do contrato assinado em ". $data ."  a  ". $data30 .", e acertam contratante e contratado, acima identificados um novo prazo de 60 (sessenta) dias, iniciando-se em ". $data31 ." e terminando em ". $data90 .".", 0, 1);
+			
+			$pdf->WriteText("               Pelo <presente> termo de prorrogação de contrato de trabalho, fica prorrogado o prazo do contrato assinado em ". $data ."  a  ". $data30 .", e acertam contratante e contratado, acima identificados um novo prazo de 60 (sessenta) dias, iniciando-se em ". $data31 ." e terminando em ". $data90 .".");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               E por estarem de acordo assinam em duas vias de igual teor e forma.", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($data30) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		//mudança de departamento/cargo
+		case 3:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "ALTERAÇÃO DE CONTRATO DE TRABALHO", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATANTE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs_empresa->nome_rz, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATADO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               Pelo presente instrumento, de um lado ". $rs_empresa->nome_rz ." doravante denominada CONTRATANTE, e de outro lado, ". $rs->nome_rz .", portadora da Carteira de Trabalho nº ". $rs->ctps ." série ". $rs->serie_ctps .", doravante denominado CONTRATADO(A), ambos já qualificados anteriormente pelo contrato de trabalho, celebram entre si, com mútuo consentimento e de acordo com a C.L.T., a alteração na cláusula 2ª do Contrato de Trabalho, que passa a ter o seguinte teor:", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "Cláusula 2ª - A partir do dia ". desformata_data($rs->data) .", o empregado solicita mudança de setor, passando a cumprir as seguintes funções e horários:", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "DEPARTAMENTO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_departamento($rs->id_departamento), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "CARGO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_cargo($rs->id_cargo), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "TURNO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_turno($rs->id_turno), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "REGIME:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_regime_turno($rs->id_regime), 0 , 1);
+			
+			$pdf->SetXY(12, 11.2);
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 8);
+			$pdf->Cell(2.1, 0.3, "DIA DA SEMANA", 1 , 0, "C", 1);
+			$pdf->Cell(1.3, 0.3, "ENTRADA", 1 , 0, "C", 1);
+			$pdf->Cell(1.7, 0.3, "INTERVALO", 1 , 0, "C", 1);
+			$pdf->Cell(1.3, 0.3, "SAÍDA", 1 , 1, "C", 1);
+			
+			for ($i=0; $i<=6; $i++) {
+				$result_dia= mysql_query("select * from rh_turnos_horarios
+											where id_turno = '". $rs->id_turno ."'
+											and   id_dia = '$i'
+											");
+				$rs_dia= mysql_fetch_object($result_dia);
+				
+				if (($i%2)==0) $fill= 1;
+				else $fill= 0;
+				
+				$pdf->SetX(12);
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 8);
+				$pdf->Cell(2.1, 0.3, strtoupper(traduz_dia($i)), 1 , 0, "C", $fill);
+				$pdf->SetFont('ARIALNARROW', '', 8);
+				$pdf->Cell(1.3, 0.3, substr($rs_dia->entrada, 0, 5), 1 , 0, "C", $fill);
+				$pdf->Cell(1.7, 0.3, pega_detalhes_intervalo($rs->id_intervalo, $i, 0), 1 , 0, "C", $fill);
+				$pdf->Cell(1.3, 0.3, substr($rs_dia->saida, 0, 5), 1 , 1, "C", $fill);
+				
+			}
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->MultiCell(0, 0.5, "E por estarem de acordo assinam em duas vias de igual teor e forma.", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.5, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		//advertencia
+		case 4:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_afastamentos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_afastamentos.id_afastamento =  '". $_GET["id_afastamento"] ."'
+								and   rh_afastamentos.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			if ($rs->tipo_afastamento=='d') $titulo= "ADVERTÊNCIA";
+			if ($rs->tipo_afastamento=='s') $titulo= "AVISO DE SUSPENSÃO";
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, $titulo, 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATANTE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs_empresa->nome_rz, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATADO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0 , 1);
+			$pdf->Ln();
+			
+			$data= desformata_data($rs->data);
+			
+			$pdf->MultiCell(0, 0.6, "               Tendo V.S.a cometido falta(s) abaixo discriminada(s), sem nenhuma justificativa que nos satisfaça, vimos pela presente adverti-lo para que tal fato não se repita, pois caso contrário seremos obrigados a tomar medidas mais enérgicas que nos são facultadas por Lei.", 0 , 1);
+			
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(0, 1, "DISCRIMINAÇÃO DA FALTA: ", 0 , 1);
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->MultiCell(0, 0.6, "". pega_motivo($rs->id_motivo) .".", 0 , 1);
+			
+			$pdf->MultiCell(0, 0.6, "". $rs->obs, 0 , 1);
+			
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "E por estarem de acordo assinam em duas vias de igual teor e forma.", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso() .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		
+		//suspensão
+		case 5:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_afastamentos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_afastamentos.id_afastamento =  '". $_GET["id_afastamento"] ."'
+								and   rh_afastamentos.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			if ($rs->tipo_afastamento=='d') $titulo= "ADVERTÊNCIA";
+			if ($rs->tipo_afastamento=='s') $titulo= "AVISO DE SUSPENSÃO";
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, $titulo, 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATANTE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs_empresa->nome_rz, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATADO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0 , 1);
+			$pdf->Ln();
+			
+			$data= desformata_data($rs->data_emissao);
+			
+			$pdf->MultiCell(0, 0.6, "               Tendo V.S.a cometido falta(s) abaixo discriminada(s), sem nenhuma justificativa que nos satisfaça, vimos pela presente suspendê-lo(a) pelo(s) próximo(s) ". $rs->qtde_dias ." dia(s) de trabalho a partir de ". $data .". Caso este fato se repita, fica claro que a Empresa poderá dispensá-lo(a) por justa causa.", 0 , 1);
+			
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(0, 1, "DISCRIMINAÇÃO DA FALTA: ", 0 , 1);
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->MultiCell(0, 0.6, pega_motivo($rs->id_motivo) .".", 0 , 1);
+			
+			$pdf->MultiCell(0, 0.6, $rs->obs, 0 , 1);
+			
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "E por estarem de acordo assinam em duas vias de igual teor e forma.", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso() .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		
+		//documento qqer
+		case 6:
+			
+			if ($_POST["metodo"]==1) {
+				if ($_POST["id_turno"]!="") {
+					$str = " and   rh_carreiras.id_turno = '". $_POST["id_turno"] ."'";
+				}
+				
+				if ($_POST["id_departamento"]!="") {
+					$str .= " and   rh_carreiras.id_departamento = '". $_POST["id_departamento"] ."'";
+					
+				}
+				
+				$result_tur= mysql_query("select distinct(rh_turnos.id_turno)
+											from  rh_carreiras, rh_turnos, rh_departamentos
+											where rh_carreiras.id_departamento = rh_departamentos.id_departamento
+											and   rh_carreiras.id_turno = rh_turnos.id_turno
+											and   rh_carreiras.atual = '1'
+											". $str ."
+											and   rh_carreiras.id_empresa = '". $_SESSION["id_empresa"] ."'
+											order by rh_carreiras.id_departamento asc, rh_carreiras.id_turno asc
+											") or die(mysql_error());
+				
+				$pdf->SetFont('ARIALNARROW', '', 10);
+				
+				while ($rs_tur= mysql_fetch_object($result_tur)) {
+					$chamada_departamento= pega_departamento(pega_id_departamento_do_id_turno($rs_tur->id_turno));
+					$chamada_turno= " / ". pega_turno($rs_tur->id_turno);
+					
+					$pdf->AddPage();
+					
+					$pdf->SetXY(7,1.75);
+				
+					$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+					$pdf->Cell(0, 0.6, $_POST["titulo"], 0 , 1, 'R');
+					
+					$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+					$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+					
+					$pdf->Ln();$pdf->Ln();
+	
+					$pdf->SetFont('ARIALNARROW', '', 10);
+					$pdf->MultiCell(0, 0.5, str_replace("&nbsp;", "", strip_tags(html_entity_decode($_POST["texto"]))), 0 , 1);
+					$pdf->Ln();
+					
+					$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+					
+					$pdf->Cell(0, 1, "FUNCIONÁRIOS ". $chamada_departamento . $chamada_turno ." :", 0 , 1, 'L');
+					
+					$pdf->Cell(0, 0.5, "", 0 , 1, 'L');
+					
+					$j=0;
+					$result_fun= mysql_query("select *
+												from  pessoas, rh_funcionarios, rh_carreiras
+												where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+												and   pessoas.tipo = 'f'
+												and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+												and   rh_carreiras.atual = '1'
+												and   rh_carreiras.id_turno = '". $rs_tur->id_turno ."'
+												and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+												and   rh_funcionarios.status_funcionario = '1'
+												order by pessoas.nome_rz asc
+												") or die(mysql_error());
+					
+					$pdf->SetFont('ARIAL_N_NEGRITO', '', 9);
+					
+					$pdf->Cell(10, 0.6, "NOME", 1, 0, 1, 1);
+					$pdf->Cell(8, 0.6, "ASSINATURA", 1, 1, 1, 1);
+					
+					$pdf->SetFont('ARIALNARROW', '', 8);
+					
+					while ($rs_fun= mysql_fetch_object($result_fun)) {
+						
+						$result_presente= mysql_query("select * from rh_afastamentos, rh_afastamentos_dias
+														where rh_afastamentos.id_empresa = '". $_SESSION["id_empresa"] ."'
+														and   rh_afastamentos.id_funcionario = '". $rs_fun->id_funcionario ."'
+														and   (
+															  rh_afastamentos.tipo_afastamento = 'p'
+														or    rh_afastamentos.tipo_afastamento = 'o'
+														or    rh_afastamentos.tipo_afastamento = 'f'
+															  )
+														and   rh_afastamentos.id_afastamento = rh_afastamentos_dias.id_afastamento
+														and   rh_afastamentos_dias.data = '". date("Ymd") ."'
+														") or die(mysql_error());
+						$linhas_presente= mysql_num_rows($result_presente);
+						
+						if ( (($_POST["situacao"]==1) && ($linhas_presente==0)) || ($_POST["situacao"]==2) ) {
+							$pdf->Cell(10, 0.6, $rs_fun->nome_rz, 1, 0);
+							$pdf->Cell(8, 0.6, "", 1, 1);
+						}
+						
+					}
+				}
+			}
+			elseif ($_POST["metodo"]==2) {
+				$pdf->AddPage();
+				$pdf->SetXY(7,1.75);
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+				$pdf->Cell(0, 0.6, $_POST["titulo"], 0 , 1, 'R');
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+				$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+				
+				$pdf->Ln();$pdf->Ln();
+
+				$pdf->SetFont('ARIALNARROW', '', 10);
+				$pdf->MultiCell(0, 0.5, str_replace("&nbsp;", "", strip_tags(html_entity_decode($_POST["texto"]))), 0 , 1);
+				$pdf->Ln();
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+				
+				$pdf->Cell(0, 1, "FUNCIONÁRIOS: ", 0 , 1, 'L');
+				
+				$pdf->Cell(0, 0.5, "", 0 , 1, 'L');
+				
+				$j=0;
+				$result_fun= mysql_query("select *
+											from  pessoas, rh_funcionarios, rh_carreiras
+											where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+											and   pessoas.tipo = 'f'
+											and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+											and   rh_carreiras.atual = '1'
+											and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+											and   rh_funcionarios.status_funcionario = '1'
+											order by pessoas.nome_rz asc
+											") or die(mysql_error());
+				
+				$pdf->SetFont('ARIALNARROW', '', 8);
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 9);
+					
+				$pdf->Cell(10, 0.6, "NOME", 1, 0, 1, 1);
+				$pdf->Cell(8, 0.6, "ASSINATURA", 1, 1, 1, 1);
+				
+				$pdf->SetFont('ARIALNARROW', '', 8);
+				
+				while ($rs_fun= mysql_fetch_object($result_fun)) {
+					
+					$result_presente= mysql_query("select * from rh_afastamentos, rh_afastamentos_dias
+													where rh_afastamentos.id_empresa = '". $_SESSION["id_empresa"] ."'
+													and   rh_afastamentos.id_funcionario = '". $rs_fun->id_funcionario ."'
+													and   (
+														  rh_afastamentos.tipo_afastamento = 'p'
+													or    rh_afastamentos.tipo_afastamento = 'o'
+													or    rh_afastamentos.tipo_afastamento = 'f'
+														  )
+													and   rh_afastamentos.id_afastamento = rh_afastamentos_dias.id_afastamento
+													and   rh_afastamentos_dias.data = '". date("Ymd") ."'
+													") or die(mysql_error());
+					$linhas_presente= mysql_num_rows($result_presente);
+										
+					if ( (($_POST["situacao"]==1) && ($linhas_presente==0)) || ($_POST["situacao"]==2) ) {
+						$pdf->Cell(10, 0.6, $rs_fun->nome_rz, 1, 0);
+						$pdf->Cell(8, 0.6, "", 1, 1);
+					}
+					
+				}
+			}
+			else {
+				$pdf->AddPage();
+				$pdf->SetXY(7,1.75);
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+				$pdf->Cell(0, 0.6, $_POST["titulo"], 0 , 1, 'R');
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+				$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+				
+				$pdf->Ln();$pdf->Ln();
+
+				$pdf->SetFont('ARIALNARROW', '', 10);
+				$pdf->MultiCell(0, 0.5, str_replace("&nbsp;", "", strip_tags(html_entity_decode($_POST["texto"]))), 0 , 1);
+				$pdf->Ln();
+				
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+				
+				$pdf->Cell(0, 1, "LISTA DE PRESENÇA: ", 0 , 1, 'L');
+				
+				$pdf->Cell(0, 0.5, "", 0 , 1, 'L');
+				
+				$pdf->Cell(7, 0.6, "NOME", 1, 0, 1, 1);
+				$pdf->Cell(5, 0.6, "SETOR", 1, 0, 1, 1);
+				$pdf->Cell(6, 0.6, "ASSINATURA", 1, 1, 1, 1);
+				
+				for ($i=0; $i<$_POST["metodo_num"]; $i++) {
+					$pdf->Cell(7, 0.6, "", 1, 0);
+					$pdf->Cell(5, 0.6, "", 1, 0);
+					$pdf->Cell(6, 0.6, "", 1, 1);
+				}
+			}
+		break;
+		
+		//troca de escala
+		case 7:
+			
+			$result= mysql_query("select * from rh_escala_troca
+										where id_empresa = '". $_SESSION["id_empresa"] ."'
+										and   id_escala_troca = '". $_GET["id_escala_troca"] ."'
+										") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "ALTERAÇÃO DE ESCALA DE TRABALHO", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 13);
+			$pdf->Cell(0, 0.6, "FUNCIONÁRIO SOLICITANTE", 'B', 1);
+			
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "NOME:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_funcionario($rs->id_funcionario_solicitante), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "DEPARTAMENTO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(5.5, 0.6, pega_departamento(pega_dado_carreira("id_departamento", $rs->id_funcionario_solicitante)), 0, 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "CARGO:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(6.5, 0.6, pega_cargo(pega_dado_carreira("id_cargo", $rs->id_funcionario_solicitante)), 0, 1);
+			
+			
+			$id_turno= pega_dado_carreira("id_turno", $rs->id_funcionario_solicitante);
+			$data2= explode("-", $rs->data_escala_troca);
+			
+			$id_dia= date("w", mktime(0, 0, 0, $data2[1], $data2[2], $data2[0]));
+			$horarios= pega_horarios_turno($id_turno, $id_dia);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "DIA:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(5.5, 0.6, desformata_data($rs->data_escala_troca) ." (". strtoupper(traduz_dia($id_dia)) .")", 0, 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "HORÁRIO:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(6.5, 0.6, $horarios[0] ." -> ". $horarios[1], 0, 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "JUSTIFICATIVA:", 0 , 1);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->MultiCell(0, 0.6, $rs->justificativa, 0, 1);
+			
+			$pdf->Ln(); $pdf->Ln();$pdf->Ln();
+					
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(11, 0.75, pega_funcionario($rs->id_funcionario_solicitante), 'T', 0, 'C');
+			$pdf->Cell(3, 0.75, "", 0, 1);
+			
+			
+			$pdf->Ln(); $pdf->Ln();
+			
+			
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 13);
+			$pdf->Cell(0, 0.6, "FUNCIONÁRIO QUE ASSUME A TROCA", 'B', 1);
+			
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "NOME:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_funcionario($rs->id_funcionario_assume), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "DEPARTAMENTO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(5.5, 0.6, pega_departamento(pega_dado_carreira("id_departamento", $rs->id_funcionario_assume)), 0, 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "CARGO:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(6.5, 0.6, pega_cargo(pega_dado_carreira("id_cargo", $rs->id_funcionario_assume)), 0, 1);
+			
+			
+			$id_turno= pega_dado_carreira("id_turno", $rs->id_funcionario_solicitante);
+			$data2= explode("-", $rs->data_escala_troca);
+			$id_dia= date("w", mktime(0, 0, 0, $data2[1], $data2[2], $data2[0]));
+			$horarios= pega_horarios_turno($id_turno, $id_dia);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "DIA:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(5.5, 0.6, desformata_data($rs->data_escala_troca) ." (". strtoupper(traduz_dia($id_dia)) .")", 0, 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "HORÁRIO:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(6.5, 0.6, $horarios[0] ." -> ". $horarios[1], 0, 1);
+			
+			$pdf->Ln(); $pdf->Ln();$pdf->Ln();
+					
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(11, 0.75, pega_funcionario($rs->id_funcionario_assume), 'T', 0, 'C');
+			$pdf->Cell(3, 0.75, "", 0, 1);
+			
+			$pdf->Ln(); $pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9, 'C');
+			$pdf->Cell(7, 0.75, "SUPERVISOR", 'T', 0, 'C');
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, "GERENTE", 'T', 1, 'C');
+			
+		break;
+		
+		//contrato de trabalho por experiencia
+		case 8:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "CONTRATO DE TRABALHO POR EXPERIÊNCIA", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$data= desformata_data($rs->data);
+			$data30= soma_data($data, 30, 0, 0);
+			$data31= soma_data($data30, 1, 0, 0);
+			$data90= soma_data($data, 90, 0, 0);
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			if ($rs->sexo=='m') { $termo= "Sr."; $termo2= ""; }
+			else { $termo= "Sra."; $termo2= "a"; }
+			
+			$pdf->WriteText("               Por este instrumento particular, que entre si fazem a empresa <". pega_empresa($_SESSION["id_empresa_atendente2"]) .">, CNPJ nº <". pega_cnpj($_SESSION["id_empresa_atendente2"]) .">, neste ato denominada simplesmente <EMPREGADORA> e o ". $termo ." <". $rs->nome_rz .">, portador". $termo2 ." da carteira de trabalho nº <". $rs->ctps .">, série <". $rs->serie_ctps .">, doravante chamado <EMPREGADO>, fica justo e acertado o presente contrato individual de trabalho, regido pelas seguintes cláusulas:");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA PRIMEIRA> - Este contrato de prazo determinado por experiência é firmado entre as partes por um período de trinta dias a contar de sua assinatura, podendo ser prorrogado por mais sessenta dias, mediante convenção entre as partes, conforme estatui os arts. 443, §2º, “c” e art. 445, parágrafo único, da CLT.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA SEGUNDA> - A carga horária contratada é de 220 horas mensais e 44 horas semanais, sendo estas últimas distribuídas durante a semana conforme acordo de compensação horária a ser pactuada entre as partes ou por força de acordos ou convenções coletivas de trabalho.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA TERCEIRA> - O Empregado trabalhará na função de <". pega_cargo($rs->id_cargo) ."> e demais atribuições que lhe forem correlatadas ou que com ela guardarem qualquer afinidade para realizar, conforme descrição da ordem de serviço. Compromete-se, ainda ao cumprimento das ordens de serviços, verbais e ou escritas, que lhe forem dadas. O local de trabalho será na sede da empresa Esterilav Serviços Hospitalares Ltda , ficando desde já pactuado que a empregadora poderá transferir o empregado para outro local de sua conveniência conforme necessidade de serviço, respeitando-se as regras dispostas no art. 469 e parágrafos 1º, 2º e 3º, da CLT.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA QUARTA> - O Empregado perceberá o salário inicial de <R$ ". fnum($rs->val_salario_experiencia) ."> (". valor_extenso($rs->val_salario_experiencia) .") por mês, na sede de seu empregador, em contra-recibo, atendendo o disposto no art. 464 da CLT. Também fica desde já pactuado a possibilidade do Empregador, no futuro, depositar em organização bancária de sua escolha os salários e quaisquer outros vencimentos que se refiram à remuneração do empregado, conforme regra  determinada pelo art. 464, parágrafo único, da CLT.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA QUINTA> - A Empregadora fica autorizada a descontar da remuneração ou de quaisquer outros direitos de natureza trabalhista do Empregado, as contribuições legais e/ou convencionadas, os eventuais adiantamentos e empréstimos concedidos, outros valores devidamente autorizados, e também qualquer prejuízo ou dano causado ao seu patrimônio, por culpa ou dolo, inclusive, os advindos de extravio, perda ou quebra de equipamentos e ferramentas de trabalho, uniforme, vestimentas, equipamento de proteção individual ou outros materiais de qualquer natureza, posto sob sua responsabilidade, consoante regra do art. 462, parágrafo 2º, da CLT.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA SEXTA> – O horário de trabalho a ser cumprido pelo Empregado será de acordo com a escala prevista pela empresa, respeitando-se a carga horária disposta na cláusula segunda deste contrato, podendo o horário ser alterado a critério da Empregadora, inclusive de jornada diária para noturna e vice-versa ou em horário misto e, quando necessário em regime de revezamento, prorrogação e compensação de horário extraordinário e banco de horas.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA SÉTIMA> – O Empregado se compromete a respeitar o regulamento interno da empresa, bem como os memorandos e ordens de serviço (verbais ou formais), defendendo os interesses da Empregadora dentro e fora do ambiente trabalho, agindo com fidelidade, dedicação e profissionalismo com as metas da empresa, seus colegas de trabalho, clientes, prestadores de serviços e todos que, em decorrência deste, como eles mantiveram contato.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA OITAVA> - Durante a vigência do contrato de trabalho, a Empregadora poderá alterar as condições de salário, função, horário ou outras condições laborais à adaptação do empregado, respeitando as suas características individuais, desde que não resultem em prejuízo na forma disciplinada pelo art. 468 da CLT.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<CLÁUSULA NONA> - Ao termo deste contrato, conforme o que determina a CLT e a Lei 8.036/90, nenhuma indenização a título de aviso prévio e indenização do FGTS será devida pela Empregadora ao Empregado. Vencido o período experimental e continuando o empregado a prestar serviços a EMPREGADORA, por tempo indeterminado, ficam prorrogadas as demais cláusulas aqui estabelecidas.");
+			
+			//$pdf->WriteText("               Pelo <presente> termo de prorrogação de contrato de trabalho, fica prorrogado o prazo do contrato assinado em ". $data ."  a  ". $data30 .", e acertam contratante e contratado, acima identificados um novo prazo de 60 (sessenta) dias, iniciando-se em ". $data31 ." e terminando em ". $data90 .".");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               E por estarem justos e contratados, o Empregado e o representante legal da Empregadora, firmam o presente instrumento em 2 vias de igual teor e forma.", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		
+		//recibo de entrega de uniforme
+		case 9:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "RECIBO DE ENTREGA DE UNIFORME", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->WriteText("               Eu, <". $rs->nome_rz .">, declaro ter recebido da empresa <". pega_empresa($_SESSION["id_empresa_atendente2"]) .">, _____ peças de uniforme. Declaro utilizar somente nas áreas da empresa e manter seu asseio e conservação. Responsabilizo-me pela devolução do mesmo em caso de interrupção do vínculo empregatício.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		
+		//cadastramento do vale transporte
+		case 10:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "CADASTRAMENTO DE VALE-TRANSPORTE", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "(DECRETO Nº 95.247, DE 17 DE NOVEMBRO DE 1987)*", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2.5, 0.6, "EMPREGADO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->WriteText("<1. Da opção:>");
+			
+			$pdf->Ln();
+			
+			$pdf->WriteText("(    ) opto por usufruir do transporte coletivo previsto pela Lei 7.418/85, tendo em vista que necessito de locomoção coletiva para me deslocar da residência-trabalho e vice-versa.");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<2. Atualização do endereço residencial:>");
+			
+			$pdf->Ln();
+			
+			$pdf->WriteText("________________________________________________________________________________________________________________________________________________________________________________________________________________");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("<3. Não opto pelo Vale-Transporte pelos seguintes motivos:>");
+			
+			$pdf->Ln();
+			
+			$pdf->WriteText("(    ) Residência próxima ao local de Trabalho.");
+			$pdf->Ln();
+			$pdf->WriteText("(    ) Meio de transporte próprio.");
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("Lembramos que:");
+			$pdf->Ln();
+			$pdf->WriteText("* o Vale-Transporte será custeado pelo beneficiário, na parcela de 6% de seu salário básico, excluídos quaisquer adicionais ou vantagens;");
+			$pdf->Ln();
+			$pdf->WriteText("* a declaração falsa ou o uso indevido do benefício constituem FALTA GRAVE, punível com justa causa (art. 7º, § 3º, do Dec.95.247/87).");
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+			
+			$pdf->Ln(); $pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 8);
+			$pdf->Cell(7, 0.1, "", 'T', 1, 'R');
+			
+			$pdf->WriteText("* <Art. 7º.> Para o exercício do direito de receber o Vale-Transporte o empregado informará ao empregador, por escrito:I - seu endereço residencial;II - os serviços e meios de transporte mais adequados ao seu deslocamento residência-trabalho e vice-versa.");
+			$pdf->Ln();
+			
+			$pdf->WriteText("<§ 1º. A informação de que trata este artigo será atualizada anualmente ou sempre que ocorrer alteração das circunstâncias mencionadas nos itens I e II, sob pena de suspensão do benefício até o cumprimento dessa exigência.>");
+			
+		break;
+		
+		//cartao de identificacao
+		case 11:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "CARTÃO DE IDENTIFICAÇÃO", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "TERMO DE RESPONSABILIDADE", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->WriteText("               O  empregado <". $rs->nome_rz ."> da ciência que na data <". desformata_data($rs->data) ."> recebeu o cartão de identificação, se comprometendo a respeitar as finalidades e obrigações do documento abaixo especificadas:");
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->WriteText("1.	o cartão de identificação possui finalidade de não apenas atestar a entrada e saída do empregado, computando-se o horário de trabalho executado pelo empregado, como também a de identificação pessoal de cada colaborador no estabelecimento da empresa;");
+			$pdf->Ln();
+			
+			$pdf->WriteText("2.	o cartão de identificação é de uso pessoal não podendo ser utilizado por qualquer outra pessoa, seja outro empregado ou superior hierárquico;");
+			$pdf->Ln();
+			
+			$pdf->WriteText("3. o empregado ficará responsável pelo mau uso do cartão de identificação, seja por danificação ou até mesmo extravio ou perda do mesmo, garantindo-se ao empregador descontar do seu salário o valor do cartão com base no artigo 462, parágrafo primeiro, da CLT;");
+			$pdf->Ln();
+			
+			$pdf->WriteText("4. fica desde já o empregado ciente que as regras prevista no regulamento da empresa fazem parte das obrigações aqui estatuídas.");
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		//cartao de identificacao
+		case 12:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "ENTREGA DE VALE TRANSPORTE", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "DECLARAÇÃO", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->WriteText("               Eu, <". $rs->nome_rz .">, declaro, para os devidos fins e direitos, que recebi o vale transporte conforme descrito abaixo, estando ciente que a declaração falsa ou o uso indevido do benefício constituem FALTA GRAVE, punível com justa causa (art. 7º, § 3º, do Dec.95.247/87), e que os mesmos são de uso exclusivo para meu deslocamento casa/empresa ou vice e versa.");
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			
+			
+			
+			
+			$result_vt= mysql_query("select * from rh_vt, rh_vt_linhas
+										where rh_vt.id_empresa = '". $_SESSION["id_empresa"] ."'
+										and   rh_vt.id_linha = rh_vt_linhas.id_linha
+										and   rh_vt.id_funcionario = '". $rs->id_funcionario ."'
+										order by  rh_vt.trajeto desc, rh_vt_linhas.id_linha asc
+										") or die(mysql_error());
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			
+			$pdf->SetFillColor(210,210,210);
+			
+			$pdf->Cell(8, 0.6, "LINHA", 1, 0, "L", 1);
+			$pdf->Cell(5, 0.6, "TRAJETO", 1, 0, "L", 1);
+			$pdf->Cell(4, 0.6, "QUANTIDADE", 1, 1, "L", 1);
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->SetFillColor(235,235,235);
+			
+			$qtde_funcionario= 0;
+			$total_funcionario= 0;
+			
+			$result_dias= mysql_query("select * from rh_escala
+										where id_funcionario = '". $rs->id_funcionario ."'
+										and   trabalha = '1'
+										and   DATE_FORMAT(data_escala, '%m/%Y') = '". date("m/Y") ."'
+										");
+			$qtde= mysql_num_rows($result_dias);
+			
+			$j=0;
+			while ($rs_vt= mysql_fetch_object($result_vt)) {
+				if (($j%2)==0) $fill= 0;
+				else $fill= 1;
+				
+				$qtde_funcionario+=$qtde;
+	
+				$total= $qtde*$rs_vt->valor;
+				$total_funcionario+=$total;
+				
+				$pdf->Cell(8, 0.6, $rs_vt->linha, 1, 0, "L", $fill);
+				$pdf->Cell(5, 0.6, pega_trajeto($rs_vt->trajeto), 1, 0, "L", $fill);
+				$pdf->Cell(4, 0.6, $qtde, 1, 1, "L", $fill);
+				
+				$j++;
+			}
+			
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		//devolução de carteira de trabalho (demitido)
+		case 13:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "DEVOLUÇÃO DA CARTEIRA DE TRABALHO", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->WriteText("               Eu, <". $rs->nome_rz ."> , portador(a) da Carteira de Trabalho nº <". $rs->ctps ."> série <". $rs->serie_ctps .">, declaro receber a carteira de trabalho da Empresa <". $rs_empresa->nome_rz .">, com as devidas anotações nesta data.");
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		//dados para admissão
+		case 14:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos, rh_cargos, rh_enderecos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_carreiras.id_cargo = rh_cargos.id_cargo
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								and   rh_funcionarios.id_pessoa = rh_enderecos.id_pessoa
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "DADOS PARA ADMISSÃO", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "EMPRESA:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs_empresa->nome_rz, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "EMPREGADO:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0, 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "DATA/ADMISSÃO:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(2.5, 0.6, pega_data_admissao($rs->id_funcionario), 0, 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(1.25, 0.6, "SETOR:", 0, 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(4, 0.6, pega_departamento($rs->id_departamento), 0, 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(1.25, 0.6, "CARGO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_cargo($rs->id_cargo), 0, 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "SALÁRIO (EXP.):", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(2.5, 0.6, "R$ ". fnum($rs->val_salario_experiencia), 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "Nº PIS:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->pis, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "RG:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(2.5, 0.6, $rs->rg_ie, 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "CPF:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->cpf_cnpj, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CTPS:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(2.5, 0.6, $rs->ctps, 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "SÉRIE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->serie_ctps, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "ESTADO CIVIL:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(2.5, 0.6, pega_estado_civil($rs->estado_civil), 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2.75, 0.6, "ESCOLARIDADE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(3.75, 0.6, pega_escolaridade($rs->escolaridade), 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(1.75, 0.6, "Nº FILHOS:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_num_filhos($rs->id_funcionario), 0, 1);
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(4, 0.5, "HORÁRIOS", 0 , 1);
+			$pdf->Cell(4, 0.5, "DE TRABALHO:", 0 , 0);
+			
+			$pdf->SetXY(5, 9);
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 9);
+			$pdf->Cell(2.5, 0.4, "DIA DA SEMANA", 1 , 0, "C", 1);
+			$pdf->Cell(1.6, 0.4, "ENTRADA", 1 , 0, "C", 1);
+			$pdf->Cell(1.8, 0.4, "INTERVALO", 1 , 0, "C", 1);
+			$pdf->Cell(1.6, 0.4, "SAÍDA", 1 , 1, "C", 1);
+			
+			for ($i=0; $i<=6; $i++) {
+				$result_dia= mysql_query("select * from rh_turnos_horarios
+											where id_turno = '". $rs->id_turno ."'
+											and   id_dia = '$i'
+											");
+				$rs_dia= mysql_fetch_object($result_dia);
+				
+				if (($i%2)==0) $fill= 1;
+				else $fill= 0;
+				
+				$pdf->SetX(5);
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 8);
+				$pdf->Cell(2.5, 0.4, strtoupper(traduz_dia($i)), 1 , 0, "C", $fill);
+				$pdf->SetFont('ARIALNARROW', '', 8);
+				$pdf->Cell(1.6, 0.4, substr($rs_dia->entrada, 0, 5), 1 , 0, "C", $fill);
+				$pdf->Cell(1.8, 0.4, pega_detalhes_intervalo($rs->id_intervalo, $i, 0), 1 , 0, "C", $fill);
+				$pdf->Cell(1.6, 0.4, substr($rs_dia->saida, 0, 5), 1 , 1, "C", $fill);
+				
+			}
+			
+			$pdf->SetXY(2, 13);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "ENDEREÇO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(11, 0.6, $rs->rua, 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(0.5, 0.6, "Nº:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(1, 0.6, $rs->numero, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "COMPLEMENTO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->complemento, 0, 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "BAIRRO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(6, 0.6, $rs->bairro, 0 , 0);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(2, 0.6, "CIDADE/UF:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(3, 0.6, pega_cidade($rs->id_cidade), 0 , 1);
+			$pdf->Ln();
+			
+			$result_tel= mysql_query("select tel_contatos_telefones.* from tel_contatos, tel_contatos_telefones
+										where tel_contatos.id_pessoa = '". $rs->id_pessoa ."'
+										and   tel_contatos.id_contato = tel_contatos_telefones.id_contato
+										");
+			while ($rs_tel= mysql_fetch_object($result_tel)) {
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+				$pdf->Cell(3, 0.6, "TEL. ". strtoupper(pega_tipo_telefone($rs_tel->tipo)) .":", 0 , 0);
+				$pdf->SetFont('ARIALNARROW', '', 10);
+				$pdf->Cell(1, 0.6, $rs_tel->telefone, 0 , 1);
+			}
+			
+			$pdf->Ln();
+			
+			$result_vt= mysql_query("select * from rh_vt, rh_vt_linhas
+										where rh_vt.id_empresa = '". $_SESSION["id_empresa"] ."'
+										and   rh_vt.id_linha = rh_vt_linhas.id_linha
+										and   rh_vt.id_funcionario = '". $rs->id_funcionario ."'
+										order by  rh_vt.trajeto desc, rh_vt_linhas.id_linha asc
+										") or die(mysql_error());
+			$linhas_vt= mysql_num_rows($result_vt);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.5, "VALE", 0 , 0);
+			
+			if ($linhas_vt>0) $usa_vt= "SIM"; else $usa_vt= "NÃO";
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(6, 0.5, $usa_vt, 0, 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.5, "TRANSPORTE:", 0 , 0);
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(3, 0.8, "DOCUMENTOS NECESSÁRIOS PARA ADMISSÃO:", 0, 1);
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(3, 0.5, "    1. UMA FOTO 3X4;", 0, 1);
+			$pdf->Cell(3, 0.5, "    2. CARTEIRA PROFISSIONAL (CTPS);", 0, 1);
+			$pdf->Cell(3, 0.5, "    3. XEROX RG (IDENTIDADE) E DO CPF;", 0, 1);
+			$pdf->Cell(3, 0.5, "    4. XEROX TITULO ELEITORAL;", 0, 1);
+			$pdf->Cell(3, 0.5, "    5. XEROX DA CARTEIRA DE MOTORISTA;", 0, 1);
+			$pdf->Cell(3, 0.5, "    6. COMPROVANTE DE RESIDÊNCIA (COM END. COMPLETO);", 0, 1);
+			$pdf->Cell(3, 0.5, "    7. CERTIFICADO DE RESERVISTA;", 0, 1);
+			$pdf->Cell(3, 0.5, "    8. ATESTADO MÉDICO ADMISSIONAL;", 0, 1);
+			$pdf->Cell(3, 0.5, "    9. CERTIDÃO DE NASCIMENTO DOS FILHOS MENORES DE 14 ANOS;", 0, 1);
+			
+		break;
+		
+		//insalubridade tempoirária
+		case 15:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_insalubridade
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_insalubridade.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								and   rh_insalubridade.id_insalubridade = '". $_GET["id_insalubridade"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "ACORDO DE PAGAMENTO DE INSALUBRIDADE", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			
+			$pdf->WriteText("               Fica acordado que no dia <". data_extenso_param($rs->data_insalubridade) ."> das <". $rs->hora_inicio ."> às <". $rs->hora_fim .">, o(a) funcionário(a) <". $rs->nome_rz ."> irá atuar, excepcionalmente nesta data e horário, como funcionário substituto no setor <". pega_departamento($rs->id_departamento) .">. Sendo que neste dia o funcionário receberá insalubridade correspondente a exposição ao risco e receberá os EPI's necessários para o desempenho da função conforme PPRA da empresa. ");
+			
+			$pdf->Ln();$pdf->Ln();$pdf->Ln();
+			
+			
+			$pdf->MultiCell(0, 0.6, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data_insalubridade) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+		//mudança de turno
+		case 16:
+			$result= mysql_query("select * from  pessoas, rh_funcionarios, rh_carreiras, rh_turnos
+								where pessoas.id_pessoa = rh_funcionarios.id_pessoa
+								and   rh_carreiras.id_carreira =  '". $_GET["id_carreira"] ."'
+								and   rh_carreiras.id_funcionario = rh_funcionarios.id_funcionario
+								and   rh_carreiras.id_turno = rh_turnos.id_turno
+								and   rh_funcionarios.id_empresa = '". $_SESSION["id_empresa"] ."'
+								order by pessoas.nome_rz asc
+								") or die(mysql_error());
+			$rs= mysql_fetch_object($result);
+			
+			$pdf->AddPage();
+			
+			$pdf->SetXY(7,1.75);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 14);
+			$pdf->Cell(0, 0.6, "ALTERAÇÃO DE CONTRATO DE TRABALHO", 0 , 1, 'R');
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 12);
+			$pdf->Cell(0, 0.6, "", 0 , 1, 'R');
+			
+			$pdf->Ln();$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATANTE:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs_empresa->nome_rz, 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3, 0.6, "CONTRATADO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, $rs->nome_rz, 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "               Pelo presente instrumento, de um lado ". $rs_empresa->nome_rz ." doravante denominada CONTRATANTE, e de outro lado, ". $rs->nome_rz .", portadora da Carteira de Trabalho nº ". $rs->ctps ." série ". $rs->serie_ctps .", doravante denominado CONTRATADO(A), ambos já qualificados anteriormente pelo contrato de trabalho, celebram entre si, com mútuo consentimento e de acordo com a C.L.T., a alteração na cláusula 2ª do Contrato de Trabalho, que passa a ter o seguinte teor:", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.6, "Cláusula 2ª - A partir do dia ". desformata_data($rs->data) .", o empregado solicita mudança de turno, passando a cumprir os seguintes horários:", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "DEPARTAMENTO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_departamento($rs->id_departamento), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "CARGO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_cargo($rs->id_cargo), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "TURNO:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_turno($rs->id_turno), 0 , 1);
+			
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 10);
+			$pdf->Cell(3.5, 0.6, "REGIME:", 0 , 0);
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->Cell(0, 0.6, pega_regime_turno($rs->id_regime), 0 , 1);
+			
+			$pdf->SetXY(12, 10.9);
+			$pdf->SetFont('ARIAL_N_NEGRITO', '', 8);
+			$pdf->Cell(2.1, 0.3, "DIA DA SEMANA", 1 , 0, "C", 1);
+			$pdf->Cell(1.3, 0.3, "ENTRADA", 1 , 0, "C", 1);
+			$pdf->Cell(1.7, 0.3, "INTERVALO", 1 , 0, "C", 1);
+			$pdf->Cell(1.3, 0.3, "SAÍDA", 1 , 1, "C", 1);
+			
+			for ($i=0; $i<=6; $i++) {
+				$result_dia= mysql_query("select * from rh_turnos_horarios
+											where id_turno = '". $rs->id_turno ."'
+											and   id_dia = '$i'
+											");
+				$rs_dia= mysql_fetch_object($result_dia);
+				
+				if (($i%2)==0) $fill= 1;
+				else $fill= 0;
+				
+				$pdf->SetX(12);
+				$pdf->SetFont('ARIAL_N_NEGRITO', '', 8);
+				$pdf->Cell(2.1, 0.3, strtoupper(traduz_dia($i)), 1 , 0, "C", $fill);
+				$pdf->SetFont('ARIALNARROW', '', 8);
+				$pdf->Cell(1.3, 0.3, substr($rs_dia->entrada, 0, 5), 1 , 0, "C", $fill);
+				$pdf->Cell(1.7, 0.3, pega_detalhes_intervalo($rs->id_intervalo, $i, 0), 1 , 0, "C", $fill);
+				$pdf->Cell(1.3, 0.3, substr($rs_dia->saida, 0, 5), 1 , 1, "C", $fill);
+				
+			}
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 10);
+			$pdf->MultiCell(0, 0.5, "E por estarem de acordo assinam em duas vias de igual teor e forma.", 0 , 1);
+			$pdf->Ln();
+			
+			$pdf->MultiCell(0, 0.5, "               ". ucwords(strtolower($rs_empresa->cidade)) .'/'. $rs_empresa->uf .", ". data_extenso_param($rs->data) .".", 0 , 1);
+			
+			$pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln(); $pdf->Ln();
+			
+			$pdf->SetFont('ARIALNARROW', '', 9);
+			$pdf->Cell(7, 0.75, $rs_empresa->nome_rz, 'T', 0);
+			$pdf->Cell(3, 0.75, "", 0, 0);
+			$pdf->Cell(7, 0.75, $rs->nome_rz, 'T', 1, 'R');
+		break;
+	}
+	
+	
+	$pdf->AliasNbPages();
+	$pdf->Output("documento_". date("d-m-Y_H:i:s") .".pdf", "I");
+	
+	$_SESSION["id_empresa_atendente2"]= "";
+}
+?>

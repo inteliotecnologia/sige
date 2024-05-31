@@ -1,0 +1,1 @@
+SIGE :: Sistema Integrado de Gestão Empresarial ::

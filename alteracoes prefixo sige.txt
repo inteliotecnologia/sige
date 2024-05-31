@@ -1,0 +1,33 @@
+RENAME TABLE `sige_db`.`afastamentos_dias`  TO `sige_db`.`rh_afastamentos_dias` ;
+RENAME TABLE `sige_db`.`cargos`  TO `sige_db`.`rh_cargos` ;
+RENAME TABLE `sige_db`.`carreiras`  TO `sige_db`.`rh_carreiras` ;
+RENAME TABLE `sige_db`.`cartoes`  TO `sige_db`.`rh_cartoes` ;
+RENAME TABLE `sige_db`.`cid10`  TO `sige_db`.`rh_cid10` ;
+RENAME TABLE `sige_db`.`departamentos`  TO `sige_db`.`rh_departamentos` ;
+RENAME TABLE `sige_db`.`descontos`  TO `sige_db`.`rh_descontos` ;
+RENAME TABLE `sige_db`.`enderecos`  TO `sige_db`.`rh_enderecos` ;
+RENAME TABLE `sige_db`.`escala`  TO `sige_db`.`rh_escala` ;
+RENAME TABLE `sige_db`.`feriados`  TO `sige_db`.`rh_feriados` ;
+RENAME TABLE `sige_db`.`funcionarios`  TO `sige_db`.`rh_funcionarios` ;
+RENAME TABLE `sige_db`.`motivos`  TO `sige_db`.`rh_motivos` ;
+RENAME TABLE `sige_db`.`ponto`  TO `sige_db`.`rh_ponto` ;
+RENAME TABLE `sige_db`.`ponto_alteracoes`  TO `sige_db`.`rh_ponto_alteracoes` ;
+
+RENAME TABLE `sige_db`.`ponto_bak`  TO `sige_db`.`rh_ponto_bak` ;
+RENAME TABLE `sige_db`.`ponto_banco`  TO `sige_db`.`rh_ponto_banco` ;
+RENAME TABLE `sige_db`.`ponto_banco_atual`  TO `sige_db`.`rh_ponto_banco_atual` ;
+
+RENAME TABLE `sige_db`.`turnos`  TO `sige_db`.`rh_turnos` ;
+RENAME TABLE `sige_db`.`turnos_horarios`  TO `sige_db`.`rh_turnos_horarios` ;
+RENAME TABLE `sige_db`.`turnos_intervalos`  TO `sige_db`.`rh_turnos_intervalos` ;
+RENAME TABLE `sige_db`.`turnos_intervalos_horarios`  TO `sige_db`.`rh_turnos_intervalos_horarios` ;
+
+RENAME TABLE `sige_db`.`contatos`  TO `sige_db`.`tel_contatos` ;
+RENAME TABLE `sige_db`.`contatos_ligacoes`  TO `sige_db`.`tel_contatos_ligacoes` ;
+RENAME TABLE `sige_db`.`contatos_telefones`  TO `sige_db`.`tel_contatos_telefones` ;
+RENAME TABLE `sige_db`.`contatos_versoes`  TO `sige_db`.`tel_contatos_versoes` ;
+
+
+
+
+

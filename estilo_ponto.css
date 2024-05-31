@@ -1,0 +1,233 @@
+/* ------------------------------------------------- TAGS */
+
+html {
+	overflow: -moz-scrollbars-vertical;
+}
+body {
+	background: url(images/body_ponto_bg.jpg) repeat-x;
+	font-family: "Arial Narrow";
+	font-size: 70%;
+}
+
+fieldset {
+	position: relative;
+	width: 95%;
+	height: auto;
+	float: left;
+	border: 1px solid #0F9ABA;
+	left: 40px;
+	top: 30px;
+}
+
+legend {
+	font-size: 18px;
+	color: #0F9ABA;
+	font-weight: bold;
+}
+
+img {
+	border: none;
+}
+
+li {
+	font-size: 18px;
+	color: #0F9ABA;
+	padding: 10px;
+	left: -40px;
+	top: -20px;
+}
+
+#nome_funcionario ul {
+	left: -40px;
+
+}
+
+#nome_funcionario ul li{
+	position: relative;
+	font-size: 18px;
+	padding: 7px;
+	list-style-type: none;
+}
+
+#corpo {
+	position: absolute;
+	width: 600px;
+	margin: 0px 0px 0px -300px;
+	left: 50%;
+	height: auto;
+	float: left;
+}
+
+#logo {
+	position: absolute;
+	width: 200px;
+	height: 75px;
+	background: url(images/ponto_sem_logo.jpg) no-repeat;
+	left: 40px;
+	top: 10px;
+	z-index: 3;
+}
+
+#relogio {
+	position: absolute;
+	font-size: 18px;
+	color: #0F9ABA;
+	top: 22px;
+	right: 40px;
+	text-align: center;
+	font: bold 22px "Arial Narrow";
+}
+
+#corpo_ponto {
+	position: relative;
+	padding-top: 120px;
+	/*background: #f0f;*/
+}
+
+#nome_funcionario {
+	position: relative;
+	float: left;
+	width: 300px;
+	height: 40px;
+	left: 50px;
+	top: 30px;
+	font-size: 19px;
+	color: #0F9ABA;
+	text-align: left;
+	padding-top: 10px;
+}
+
+#erro{
+	position: relative;
+	float: left;
+	width: 500px;
+	height: 40px;
+	left: 50px;
+	top: 40px;
+	font-size: 17px;
+	color: #fff;
+	padding-top: 10px;	
+	font-weight: bold;
+	background: #FF0000;
+	text-align: center;
+}
+
+#supervisor{
+	position: relative;
+	float: left;
+	width: 500px;
+	height: 40px;
+	left: 50px;
+	top: 20px;
+	font-size: 17px;
+	color: #000;
+	padding-top: 10px;	
+	font-weight: bold;
+	background: #ff0;
+	text-align: center;
+}
+#formulario_ponto {
+	position: absolute;
+	top: 40px;
+	left: 55px;
+	z-index: 2;
+}
+#titulo_padrao {
+	position: relative;
+	float: left;
+	width: 100%;
+	height: 40px;
+	top: 0;
+	font-size: 20px;
+	color: #0F9ABA;
+	font-weight: bold;
+	text-align: center;
+}
+
+#titulo_padrao2 {
+	position: relative;
+	float: left;
+	width: 500px;
+	height: 40px;
+	left: 50px;
+	top: 50px;
+	font-size: 17px;
+	color: #0F9ABA;
+	padding-top: 10px;	
+	font-weight: bold;
+	text-align: center;
+	text-indent: 5px;
+}
+
+#informacao_batida, #informacao_batida_aniversario {
+	position: relative;
+	float: left;
+	width: 500px;
+	height: 40px;
+	left: 50px;
+	top: 20px;
+	font-size: 25px;
+	color: #333;
+	padding-top: 10px;	
+	font-weight: bold;
+	text-align: center;
+	text-transform: uppercase;
+}
+.batida0 {
+	background: #ff0;
+}
+.batida1 {
+	background: #0f0;
+}
+#informacao_batida_aniversario {
+	background: #335F86;
+	color: #fff;
+	margin-bottom: 10px;
+}
+
+#foto {
+	position: relative;
+	float: left;
+	width: 200px;
+	height: 245px;
+	left: 50px;
+	top: 50px;
+}
+
+#imagens {
+	position: relative;
+	float: left;
+	top: 15px;
+	left: 25px;
+	width: 600px;
+	height: 355px;
+}
+
+#carregando {
+	position: relative;
+	float: left;
+	width: 500px;
+	height: 32px;
+	left: 50px;
+	top: 130px;
+	background: url(images/loading.gif) no-repeat;
+	background-position: center;
+	text-indent: 360px;
+	padding-top: 13px;
+}
+
+input, textarea, select {
+	/*color: #fff;*/
+	background: #fff;
+}
+
+.escondido {
+	display: none;
+}
+
+.cartao {
+	visibility: hidden;
+	width: 0;
+
+}
+
